@@ -64,13 +64,15 @@ while True:
             # print("Test :", text)
             stringList.append(text)
 
-            #wait till 10 samples are extracted
+            # Wait till 8 samples are extracted
             if len(stringList) > 8:
                 c = Counter(stringList)
                 test = c.most_common(1)
-                print(test[0][0])
-                # Reset counter
-                stringList = []
+                if test[0][1] > 2:
+                    print(test[0][0])
+                    # Reset counter
+                    stringList = []
+
     # Set end time
     end = datetime.datetime.now()
     # Calculate the time it took to process one frame
