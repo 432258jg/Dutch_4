@@ -43,34 +43,42 @@ while True:
         rect_img = sliced[y: y + h, x: x + w]
         gray = cv2.cvtColor(rect_img, cv2.COLOR_BGR2GRAY)
         #Gaussian2 = cv2.GaussianBlur(gray, (7, 7), 0)
-        thr = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
-                                    cv2.THRESH_BINARY_INV, 21, 9)
-        #thresh = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
         # Extract text via tesseract
-        text = pytesseract.image_to_string(thr, lang='eng')
-        text = text.replace("\n", " ")
+        text = pytesseract.image_to_string(thresh, lang='eng', config="-c tessedit_char_whitelist=01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ --psm 6")
+        # 01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz All letters and numbers
+
+        text = text.replace("|", "")
+        text = text.replace("/", " ")
+        text = text.replace("(", "")
+        text = text.replace(")", "")
+
+        # Remove whitespaces
+        text = text.replace("\n", "")
+        text = text.replace(" ", "")
+        # Only take first 9 characters
+        text = text[0:9]
 
         if text != "":
-            #print("Test :", text)
+            # print("Test :", text)
             stringList.append(text)
 
             #wait till 10 samples are extracted
             if len(stringList) > 8:
                 c = Counter(stringList)
                 test = c.most_common(1)
-                print("Number is :", test[0])
+                print(test[0][0])
                 # Reset counter
                 stringList = []
     # Set end time
     end = datetime.datetime.now()
     # Calculate the time it took to process one frame
     fps = f"FPS: {1 / (end - start).total_seconds():.2f}"
-    #if rect_img is not None:
-        # could not broadcast input array from shape (107,323,3) into shape (300,600,3)
-        # img[upper_left[1] : bottom_right[1], upper_left[0] : bottom_right[0]] = rect_img
-        #img[upper_left[1]: upper_left[1] + rect_img.shape[0],
-        #upper_left[0]: upper_left[0] + rect_img.shape[1]] = rect_img
+
+    # Reset list of nothing it present
+    # if rect_img is None:
+    #    stringList = []
 
     # Add fps counter in img
     cv2.putText(img, fps, (50, 50),
